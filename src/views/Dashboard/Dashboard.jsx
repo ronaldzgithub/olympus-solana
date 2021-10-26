@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useSelector } from "react-redux";
 import { Paper, Grid, Typography, Box, Zoom } from "@material-ui/core";
 import { trim } from "../../helpers";
@@ -19,7 +20,6 @@ function Dashboard() {
   const marketCap = useSelector(state => {
     return state.app.marketCap;
   });
-
   return (
     <div id="dashboard-view">
       <Grid container spacing={1} className="top-row-data">
@@ -68,9 +68,9 @@ function Dashboard() {
                   }).format(circSupply)}
                     /
                     ${new Intl.NumberFormat("en-US", {
-                      maximumFractionDigits: 0,
-                      minimumFractionDigits: 0,
-                    }).format(totalSupply)}`
+                    maximumFractionDigits: 0,
+                    minimumFractionDigits: 0,
+                  }).format(totalSupply)}`
                 )}
               </Typography>
             </Paper>
