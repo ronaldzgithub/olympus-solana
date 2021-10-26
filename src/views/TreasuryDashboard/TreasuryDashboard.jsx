@@ -69,7 +69,12 @@ function TreasuryDashboard() {
 
       let runway = metrics.filter(pm => pm.runway10k > 5);
       setRunway(runway);
-      main();
+      main().then(
+        () => alert('end'),
+        err => {
+          console.error(err);
+        },
+      );
     });
 
     apollo(rebasesDataQuery).then(r => {

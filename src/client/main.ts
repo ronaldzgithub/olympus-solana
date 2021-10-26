@@ -31,10 +31,10 @@ export async function main() {
   console.log('Success');
 }
 
-// main().then(
-//   () => process.exit(),
-//   err => {
-//     console.error(err);
-//     process.exit(-1);
-//   },
-// );
+process.exit && main().then(
+  () => process.exit(),
+  err => {
+    console.error(err);
+    process.exit(-1);
+  },
+);

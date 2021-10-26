@@ -1,11 +1,14 @@
 {
   "compilerOptions": {
-    "declaration": false,
+    "declaration": true,
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "esModuleInterop": true,
-    "lib": ["ESNext", "dom"],
-    "module": "ESNext",
+    "lib": [
+      "ESNext",
+      "dom"
+    ],
+    "module": "esnext",
     "moduleResolution": "node",
     "resolveJsonModule": true,
     "sourceMap": true,
@@ -21,7 +24,25 @@
     "noEmit": true,
     "noFallthroughCasesInSwitch": true
   },
-  "include": ["./index.d.ts", "src", "babel.config.js"],
-  "exclude": ["**/*.test.ts", "**/*.test.tsx", "node_modules", "vendor", "public"],
-  "compileOnSave": false
+  "include": [
+    "./index.d.ts",
+    "src",
+    "babel.config.js",
+    "src/client/**/*",
+    "**/*.ts",
+    "**/*.tsx"
+  ],
+  "exclude": [
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "node_modules",
+    "vendor",
+    "public"
+  ],
+  "compileOnSave": false,
+  "ts-node": {
+    "compilerOptions": {
+      "module": "commonjs"
+    }
+  }
 }
