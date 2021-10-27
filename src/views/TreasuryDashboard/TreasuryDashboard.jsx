@@ -3,7 +3,7 @@ import { Paper, Grid, Typography, Box, Zoom, Container, useMediaQuery } from "@m
 import { Skeleton } from "@material-ui/lab";
 import { useDispatch, useSelector } from "react-redux";
 import { useConnection, useWallet } from '@solana/wallet-adapter-react';
-import web3 from '@solana/web3.js'
+import { LAMPORTS_PER_SOL } from '@solana/web3.js'
 import Chart from "../../components/Chart/Chart.jsx";
 import { trim, formatCurrency } from "../../helpers";
 import {
@@ -62,7 +62,7 @@ function TreasuryDashboard() {
   });
 
   const { connection } = useConnection();
-  const { publicKey, wallet, connected } = useWallet();
+  const { publicKey, connected } = useWallet();
   const balance = useMemo(async () => {
     if (connection && publicKey) {
       const tmp = await connection.getBalance(publicKey)
@@ -71,11 +71,11 @@ function TreasuryDashboard() {
   }, [connection, publicKey])
 
   useEffect(() => {
-    if(balance) {
-      balance.then(r =>
+    if (balance) {
+      balance.then(r => {
         dispatch(getSolanaBalance(r))
-      )
-      .catch(err => console.log(err))
+      })
+        .catch(err => console.log(err))
     }
   }, [balance])
 
@@ -128,7 +128,7 @@ function TreasuryDashboard() {
                     Your Balance
                   </Typography>
                   <Typography variant="h5">
-                    {solBalance} SOL
+                    {solBalance / LAMPORTS_PER_SOL} SOL
                   </Typography>
                 </Box>
               </Box>

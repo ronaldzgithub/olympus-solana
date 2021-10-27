@@ -37,7 +37,7 @@ export const getBalances = createAsyncThunk(
 
 export const getSolanaBalance = createAsyncThunk(
   "account/getSolanaBalance",
-  async (balance) => {
+  async (balance: any) => {
     return {
       solBalance: balance
     }

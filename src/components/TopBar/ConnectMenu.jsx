@@ -54,7 +54,6 @@ function ConnectMenu({ theme }) {
   useEffect(() => {
     setConnected(connected);
   }, [web3, connected]);
-  const { wallet } = useWallet();
 
   return (
     <div
