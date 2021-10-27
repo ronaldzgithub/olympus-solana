@@ -237,7 +237,7 @@ function Stake() {
             </Grid>
 
             <div className="staking-area">
-              {!address ? (
+              {!connected ? (
                 <div className="stake-wallet-notification">
                   <div className="wallet-menu" id="wallet-menu">
                     {modalButton}
