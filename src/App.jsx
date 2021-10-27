@@ -201,7 +201,7 @@ function App() {
     if (isSidebarExpanded) handleSidebarClose();
   }, [location]);
 
-  const network = WalletAdapterNetwork.Devnet;
+  const network = WalletAdapterNetwork.Testnet;
   // You can also provide a custom RPC endpoint
   const endpoint = useMemo(() => clusterApiUrl(network), [network]);
   // @solana/wallet-adapter-wallets includes all the adapters but supports tree shaking --

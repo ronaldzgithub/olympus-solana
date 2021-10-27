@@ -13,44 +13,13 @@ import CopyIcon from '@material-ui/icons/FileCopy';
 import DisconnectIcon from '@material-ui/icons/LinkOff';
 import SwitchIcon from '@material-ui/icons/SwapHoriz';
 import { useConnection, useWallet } from '@solana/wallet-adapter-react';
-import { LAMPORTS_PER_SOL, TransactionSignature } from '@solana/web3.js';
-import React, { FC, useMemo, useState, useCallback } from 'react';
+import { LAMPORTS_PER_SOL, PublicKey, TransactionSignature } from '@solana/web3.js';
+import React, { FC, useMemo, useState, useEffect } from 'react';
 import { useWalletDialog } from './useWalletDialog';
 import { WalletConnectButton } from './WalletConnectButton';
 import { WalletDialogButton } from './WalletDialogButton';
 import { WalletIcon } from './WalletIcon';
-import { useNotify } from './notify';
-
-const useStyles = makeStyles((theme: Theme) => ({
-    root: {},
-    menu: {
-        '& .MuiList-root': {
-            padding: 0,
-        },
-        '& .MuiMenuItem-root': {
-            padding: theme.spacing(1, 2),
-            boxShadow: 'inset 0 1px 0 0 ' + 'rgba(255, 255, 255, 0.1)',
-            '&:not(.MuiButtonBase-root)': {
-                padding: 0,
-                '& .MuiButton-root': {
-                    borderRadius: 0,
-                },
-            },
-            '&:hover': {
-                boxShadow:
-                    'inset 0 1px 0 0 ' + 'rgba(255, 255, 255, 0.1)' + ', 0 1px 0 0 ' + 'rgba(255, 255, 255, 0.05)',
-            },
-        },
-        '& .MuiListItemIcon-root': {
-            marginRight: theme.spacing(),
-            minWidth: 'unset',
-            '& .MuiSvgIcon-root': {
-                width: 20,
-                height: 20,
-            },
-        },
-    },
-}));
+// import { useNotify } from './notify';
 
 export const WalletMultiButton: FC<ButtonProps> = ({
     color = 'primary',
@@ -58,7 +27,6 @@ export const WalletMultiButton: FC<ButtonProps> = ({
     children,
     ...props
 }) => {
-    const styles = useStyles();
     const { publicKey, wallet, disconnect } = useWallet();
     const { setOpen } = useWalletDialog();
     const [anchor, setAnchor] = useState<HTMLElement>();
@@ -86,8 +54,9 @@ export const WalletMultiButton: FC<ButtonProps> = ({
     }
 
     const { connection } = useConnection();
-    // const notify = useNotify();
+
     const handleAirdrop = async () => {
+        setAnchor(undefined);
         if (!publicKey) {
             console.log('error', 'Wallet not connected!');
             return;
@@ -95,7 +64,6 @@ export const WalletMultiButton: FC<ButtonProps> = ({
 
         let signature: TransactionSignature = '';
         try {
-            alert(LAMPORTS_PER_SOL)
             signature = await connection.requestAirdrop(publicKey, LAMPORTS_PER_SOL);
             console.log('info', 'Airdrop requested:', signature);
 
@@ -115,7 +83,6 @@ export const WalletMultiButton: FC<ButtonProps> = ({
                 onClick={(event) => setAnchor(event.currentTarget)}
                 aria-controls="wallet-menu"
                 aria-haspopup="true"
-                className={styles.root}
                 {...props}
             >
                 {content}
@@ -125,7 +92,6 @@ export const WalletMultiButton: FC<ButtonProps> = ({
                 anchorEl={anchor}
                 open={!!anchor}
                 onClose={() => setAnchor(undefined)}
-                className={styles.menu}
                 marginThreshold={0}
                 TransitionComponent={Fade}
                 transitionDuration={250}
@@ -136,7 +102,6 @@ export const WalletMultiButton: FC<ButtonProps> = ({
                         color={color}
                         variant={variant}
                         startIcon={<WalletIcon wallet={wallet} />}
-                        className={styles.root}
                         onClick={(event) => setAnchor(undefined)}
                         fullWidth
                         {...props}
@@ -167,9 +132,6 @@ export const WalletMultiButton: FC<ButtonProps> = ({
                         </ListItemIcon>
                         Connect a different wallet
                     </MenuItem>
-                    <MenuItem onClick={handleAirdrop}>
-                        Request airdrop
-                    </MenuItem>
                     <MenuItem
                         onClick={() => {
                             setAnchor(undefined);
@@ -181,6 +143,12 @@ export const WalletMultiButton: FC<ButtonProps> = ({
                             <DisconnectIcon />
                         </ListItemIcon>
                         Disconnect
+                    </MenuItem>
+                    <MenuItem onClick={handleAirdrop}>
+                        <ListItemIcon>
+                            <CopyIcon />
+                        </ListItemIcon>
+                        Request airdrop
                     </MenuItem>
                 </Collapse>
             </Menu>

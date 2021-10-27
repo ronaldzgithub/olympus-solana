@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Paper, Grid, Typography, Box, Zoom, Container, useMediaQuery } from "@material-ui/core";
 import { Skeleton } from "@material-ui/lab";
 import { useSelector } from "react-redux";
+import { useConnection, useWallet } from '@solana/wallet-adapter-react';
 import Chart from "../../components/Chart/Chart.jsx";
 import { trim, formatCurrency } from "../../helpers";
 import {
@@ -18,6 +19,7 @@ import apollo from "../../lib/apolloClient";
 import InfoTooltip from "src/components/InfoTooltip/InfoTooltip.jsx";
 
 function TreasuryDashboard() {
+  const [balance, setBalance] = useState(0)
   const [data, setData] = useState(null);
   const [apy, setApy] = useState(null);
   const [runway, setRunway] = useState(null);
@@ -50,6 +52,20 @@ function TreasuryDashboard() {
   const wsOhmPrice = useSelector(state => {
     return state.app.marketPrice * state.app.currentIndex;
   });
+
+  const { connection } = useConnection();
+  const { publicKey, wallet } = useWallet();
+
+  useEffect(() => {
+    if (publicKey)
+      handleGetBalance(publicKey)
+  }, [publicKey])
+
+  const handleGetBalance = async (key) => {
+    const balancePromise = await connection.getBalance(key);
+    setBalance(balancePromise)
+  }
+
 
   useEffect(() => {
     apollo(treasuryDataQuery).then(r => {
@@ -92,6 +108,18 @@ function TreasuryDashboard() {
       >
         <Box className={`hero-metrics`}>
           <Paper className="ohm-card">
+            {wallet &&
+              <Box display="flex" flexWrap="wrap" justifyContent="center" alignItems="center">
+                <Box className="metric balance">
+                  <Typography variant="h6" color="textSecondary">
+                    Your Balance
+                  </Typography>
+                  <Typography variant="h5">
+                    {balance / 1000000000} SOL
+                  </Typography>
+                </Box>
+              </Box>
+            }
             <Box display="flex" flexWrap="wrap" justifyContent="space-between" alignItems="center">
               <Box className="metric market">
                 <Typography variant="h6" color="textSecondary">
