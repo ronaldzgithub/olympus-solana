@@ -1,6 +1,5 @@
 .sidebar {
   min-width: 280px;
-  z-index: 2;
   border-radius: 0 !important;
 }
 
@@ -30,6 +29,9 @@
   align-items: center;
   text-decoration: none;
   margin: 30px 0 10px 0;
+  >a {
+    font-size: 30px;
+  }
   .branding-header-icon {
     width: 50px;
     display: block;

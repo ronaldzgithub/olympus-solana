@@ -46,15 +46,15 @@ export default function ExternalStakePool() {
   };
 
   useEffect(() => {
-    if (hasCachedProvider()) {
-      // then user DOES have a wallet
-      connect().then(() => {
-        setWalletChecked(true);
-      });
-    } else {
-      // then user DOES NOT have a wallet
-      setWalletChecked(true);
-    }
+    // if (hasCachedProvider()) {
+    //   // then user DOES have a wallet
+    //   connect().then(() => {
+    //     setWalletChecked(true);
+    //   });
+    // } else {
+    //   // then user DOES NOT have a wallet
+    //   setWalletChecked(true);
+    // }
   }, []);
 
   // this useEffect fires on state change from above. It will ALWAYS fire AFTER

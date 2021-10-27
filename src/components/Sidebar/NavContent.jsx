@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useMemo, useCallback, useState } from "react";
 import { NavLink } from "react-router-dom";
 import Social from "./Social";
 import externalUrls from "./externalUrls";
@@ -8,6 +8,7 @@ import { ReactComponent as DashboardIcon } from "../../assets/icons/dashboard.sv
 import { ReactComponent as OlympusIcon } from "../../assets/icons/olympus-nav-header.svg";
 import { ReactComponent as PoolTogetherIcon } from "../../assets/icons/33-together.svg";
 import { trim, shorten } from "../../helpers";
+import { useWallet } from '@solana/wallet-adapter-react';
 import { useAddress, useWeb3Context } from "src/hooks/web3Context";
 import useBonds from "../../hooks/Bonds";
 import { Paper, Link, Box, Typography, SvgIcon } from "@material-ui/core";
@@ -16,7 +17,13 @@ import "./sidebar.scss";
 
 function NavContent() {
   const [isActive] = useState();
-  const address = useAddress();
+  const { publicKey, wallet } = useWallet();
+  const base58 = useMemo(() => publicKey?.toBase58(), [publicKey]);
+  const content = useMemo(() => {
+    if (!wallet || !base58) return null;
+    return base58.slice(0, 4) + '..' + base58.slice(-4);
+  }, [wallet, base58]);
+
   const { bonds } = useBonds();
   const { chainID } = useWeb3Context();
 
@@ -40,18 +47,19 @@ function NavContent() {
         <div className="dapp-menu-top">
           <Box className="branding-header">
             <Link href="https://olympusdao.finance" target="_blank">
-              <SvgIcon
+              {/* <SvgIcon
                 color="primary"
                 component={OlympusIcon}
                 viewBox="0 0 151 100"
                 style={{ minWdth: "151px", minHeight: "98px", width: "151px" }}
-              />
+              /> */}
+              Project X
             </Link>
 
-            {address && (
+            {wallet && (
               <div className="wallet-link">
-                <Link href={`https://etherscan.io/address/${address}`} target="_blank">
-                  {shorten(address)}
+                <Link href={`https://explorer.solana.com/address/${base58}?cluster=testnet`} target="_blank">
+                  {content}
                 </Link>
               </div>
             )}

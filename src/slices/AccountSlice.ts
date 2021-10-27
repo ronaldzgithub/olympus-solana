@@ -11,7 +11,8 @@ import { setAll } from "../helpers";
 import { createAsyncThunk, createSelector, createSlice } from "@reduxjs/toolkit";
 import { Bond, NetworkID } from "src/lib/Bond"; // TODO: this type definition needs to move out of BOND.
 import { RootState } from "src/store";
-import { IBaseAddressAsyncThunk, ICalcUserBondDetailsAsyncThunk } from "./interfaces";
+import { IBaseAddressAsyncThunk, IBaseBalancesAsyncThunk, ICalcUserBondDetailsAsyncThunk } from "./interfaces";
+import { PublicKey } from "@solana/web3.js";
 
 export const getBalances = createAsyncThunk(
   "account/getBalances",
@@ -34,6 +35,14 @@ export const getBalances = createAsyncThunk(
   },
 );
 
+export const getSolanaBalance = createAsyncThunk(
+  "account/getSolanaBalance",
+  async (balance) => {
+    return {
+      solBalance: balance
+    }
+  }
+)
 interface IUserAccountDetails {
   balances: {
     dai: string;
@@ -195,11 +204,13 @@ interface IAccountSlice {
     oldsohm: string;
   };
   loading: boolean;
+  solBalance: any;
 }
 const initialState: IAccountSlice = {
   loading: false,
   bonds: {},
   balances: { ohm: "", sohm: "", dai: "", oldsohm: "" },
+  solBalance: ""
 };
 
 const accountSlice = createSlice({
@@ -212,6 +223,9 @@ const accountSlice = createSlice({
   },
   extraReducers: builder => {
     builder
+      .addCase(getSolanaBalance.fulfilled, (state, action) => {
+        state.solBalance = action.payload.solBalance;
+      })
       .addCase(loadAccountDetails.pending, state => {
         state.loading = true;
       })

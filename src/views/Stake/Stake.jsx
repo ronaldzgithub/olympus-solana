@@ -28,6 +28,8 @@ import { Skeleton } from "@material-ui/lab";
 import ExternalStakePool from "./ExternalStakePool";
 import { error } from "../../slices/MessagesSlice";
 import { ethers } from "ethers";
+import { useWallet } from "@solana/wallet-adapter-react";
+import { WalletMultiButton } from "src/components/Wallet";
 
 function a11yProps(index) {
   return {
@@ -41,7 +43,8 @@ const ohmImg = getOhmTokenImage(16, 16);
 
 function Stake() {
   const dispatch = useDispatch();
-  const { provider, address, connected, connect, chainID } = useWeb3Context();
+  const { provider, address, chainID } = useWeb3Context();
+  const { connect, connected } = useWallet()
 
   const [zoomed, setZoomed] = useState(false);
   const [view, setView] = useState(0);
@@ -135,9 +138,10 @@ function Stake() {
   let modalButton = [];
 
   modalButton.push(
-    <Button variant="contained" color="primary" className="connect-button" onClick={connect} key={1}>
-      Connect Wallet
-    </Button>,
+    <WalletMultiButton color="primary" className="connect-button" />
+    // <Button variant="contained" color="primary" className="connect-button" onClick={() => connect()} key={1}>
+    //   Connect Wallet
+    // </Button>,
   );
 
   const changeView = (event, newView) => {

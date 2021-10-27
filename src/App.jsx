@@ -30,7 +30,7 @@ import { girth as gTheme } from "./themes/girth.js";
 
 import "./style.scss";
 
-import { ConnectionProvider, WalletProvider } from "@solana/wallet-adapter-react";
+import { ConnectionProvider, useWallet, WalletProvider } from "@solana/wallet-adapter-react";
 import { WalletAdapterNetwork } from "@solana/wallet-adapter-base";
 import {
   getLedgerWallet,
@@ -57,6 +57,7 @@ const transitionDuration = 969;
 
 const useStyles = makeStyles(theme => ({
   drawer: {
+    zIndex: 11,
     [theme.breakpoints.up("md")]: {
       width: drawerWidth,
       flexShrink: 0,
@@ -99,7 +100,8 @@ function App() {
   const isSmallerScreen = useMediaQuery("(max-width: 980px)");
   const isSmallScreen = useMediaQuery("(max-width: 600px)");
 
-  const { connect, hasCachedProvider, provider, chainID, connected } = useWeb3Context();
+  const { hasCachedProvider, provider, chainID } = useWeb3Context();
+  const { connect, connected } = useWallet();
   const address = useAddress();
 
   const [walletChecked, setWalletChecked] = useState(false);
@@ -153,15 +155,15 @@ function App() {
   // ... if we don't wait we'll ALWAYS fire API calls via JsonRpc because provider has not
   // ... been reloaded within App.
   useEffect(() => {
-    if (hasCachedProvider()) {
-      // then user DOES have a wallet
-      connect().then(() => {
-        setWalletChecked(true);
-      });
-    } else {
-      // then user DOES NOT have a wallet
-      setWalletChecked(true);
-    }
+    // if (hasCachedProvider()) {
+    //   // then user DOES have a wallet
+    //   connect().then(() => {
+    //     setWalletChecked(true);
+    //   });
+    // } else {
+    //   // then user DOES NOT have a wallet
+    //   setWalletChecked(true);
+    // }
 
     // We want to ensure that we are storing the UTM parameters for later, even if the user follows links
     storeQueryParameters();

@@ -1,8 +1,9 @@
-import { useEffect, useState } from "react";
+import { useMemo, useEffect, useState } from "react";
 import { Paper, Grid, Typography, Box, Zoom, Container, useMediaQuery } from "@material-ui/core";
 import { Skeleton } from "@material-ui/lab";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { useConnection, useWallet } from '@solana/wallet-adapter-react';
+import web3 from '@solana/web3.js'
 import Chart from "../../components/Chart/Chart.jsx";
 import { trim, formatCurrency } from "../../helpers";
 import {
@@ -18,8 +19,11 @@ import "./treasury-dashboard.scss";
 import apollo from "../../lib/apolloClient";
 import InfoTooltip from "src/components/InfoTooltip/InfoTooltip.jsx";
 
+import { getSolanaBalance } from "../../slices/AccountSlice";
+
 function TreasuryDashboard() {
-  const [balance, setBalance] = useState(0)
+  const dispatch = useDispatch();
+
   const [data, setData] = useState(null);
   const [apy, setApy] = useState(null);
   const [runway, setRunway] = useState(null);
@@ -53,18 +57,27 @@ function TreasuryDashboard() {
     return state.app.marketPrice * state.app.currentIndex;
   });
 
+  const solBalance = useSelector(state => {
+    return state.account.solBalance;
+  });
+
   const { connection } = useConnection();
-  const { publicKey, wallet } = useWallet();
+  const { publicKey, wallet, connected } = useWallet();
+  const balance = useMemo(async () => {
+    if (connection && publicKey) {
+      const tmp = await connection.getBalance(publicKey)
+      return tmp
+    }
+  }, [connection, publicKey])
 
   useEffect(() => {
-    if (publicKey)
-      handleGetBalance(publicKey)
-  }, [publicKey])
-
-  const handleGetBalance = async (key) => {
-    const balancePromise = await connection.getBalance(key);
-    setBalance(balancePromise)
-  }
+    if(balance) {
+      balance.then(r =>
+        dispatch(getSolanaBalance(r))
+      )
+      .catch(err => console.log(err))
+    }
+  }, [balance])
 
 
   useEffect(() => {
@@ -108,14 +121,14 @@ function TreasuryDashboard() {
       >
         <Box className={`hero-metrics`}>
           <Paper className="ohm-card">
-            {wallet &&
+            {connected &&
               <Box display="flex" flexWrap="wrap" justifyContent="center" alignItems="center">
                 <Box className="metric balance">
                   <Typography variant="h6" color="textSecondary">
                     Your Balance
                   </Typography>
                   <Typography variant="h5">
-                    {balance / 1000000000} SOL
+                    {solBalance} SOL
                   </Typography>
                 </Box>
               </Box>

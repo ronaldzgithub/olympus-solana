@@ -1,4 +1,5 @@
 import { JsonRpcProvider, StaticJsonRpcProvider } from "@ethersproject/providers";
+import { PublicKey } from "@solana/web3.js";
 import { Bond, NetworkID } from "src/lib/Bond";
 
 export interface IJsonRPCError {
@@ -32,6 +33,10 @@ export interface IActionValueAsyncThunk extends IValueAsyncThunk {
 
 export interface IBaseAddressAsyncThunk extends IBaseAsyncThunk {
   readonly address: string;
+}
+
+export interface IBaseBalancesAsyncThunk extends IBaseAsyncThunk {
+  readonly publicKey: PublicKey;
 }
 
 // Account Slice
