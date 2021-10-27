@@ -3,7 +3,7 @@ import { WalletDialogContext } from './useWalletDialog';
 import { WalletDialog, WalletDialogProps } from './WalletDialog';
 
 export interface WalletDialogProviderProps extends WalletDialogProps {
-    children: ReactNode;
+    children: any;
 }
 
 export const WalletDialogProvider: FC<WalletDialogProviderProps> = ({ children, ...props }) => {

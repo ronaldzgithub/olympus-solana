@@ -12,12 +12,14 @@ import {
 import CopyIcon from '@material-ui/icons/FileCopy';
 import DisconnectIcon from '@material-ui/icons/LinkOff';
 import SwitchIcon from '@material-ui/icons/SwapHoriz';
-import { useWallet } from '@solana/wallet-adapter-react';
-import React, { FC, useMemo, useState } from 'react';
+import { useConnection, useWallet } from '@solana/wallet-adapter-react';
+import { LAMPORTS_PER_SOL, TransactionSignature } from '@solana/web3.js';
+import React, { FC, useMemo, useState, useCallback } from 'react';
 import { useWalletDialog } from './useWalletDialog';
 import { WalletConnectButton } from './WalletConnectButton';
 import { WalletDialogButton } from './WalletDialogButton';
 import { WalletIcon } from './WalletIcon';
+import { useNotify } from './notify';
 
 const useStyles = makeStyles((theme: Theme) => ({
     root: {},
@@ -83,6 +85,27 @@ export const WalletMultiButton: FC<ButtonProps> = ({
         );
     }
 
+    const { connection } = useConnection();
+    // const notify = useNotify();
+    const handleAirdrop = async () => {
+        if (!publicKey) {
+            console.log('error', 'Wallet not connected!');
+            return;
+        }
+
+        let signature: TransactionSignature = '';
+        try {
+            alert(LAMPORTS_PER_SOL)
+            signature = await connection.requestAirdrop(publicKey, LAMPORTS_PER_SOL);
+            console.log('info', 'Airdrop requested:', signature);
+
+            await connection.confirmTransaction(signature, 'processed');
+            console.log('success', 'Airdrop successful!', signature);
+        } catch (error: any) {
+            console.log('error', `Airdrop failed! ${error?.message}`, signature);
+        }
+    }
+
     return (
         <>
             <Button
@@ -143,6 +166,9 @@ export const WalletMultiButton: FC<ButtonProps> = ({
                             <SwitchIcon />
                         </ListItemIcon>
                         Connect a different wallet
+                    </MenuItem>
+                    <MenuItem onClick={handleAirdrop}>
+                        Request airdrop
                     </MenuItem>
                     <MenuItem
                         onClick={() => {

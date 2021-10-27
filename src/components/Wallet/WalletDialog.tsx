@@ -1,15 +1,13 @@
 import {
+    Box,
     Button,
     Collapse,
-    Dialog,
-    DialogContent,
+    Modal,
     DialogProps,
-    DialogTitle,
     IconButton,
     List,
     ListItem,
-    makeStyles,
-    Theme,
+    Fade
 } from '@material-ui/core';
 import CloseIcon from '@material-ui/icons/Close';
 import ExpandLess from '@material-ui/icons/ExpandLess';
@@ -17,65 +15,9 @@ import ExpandMore from '@material-ui/icons/ExpandMore';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { WalletName } from '@solana/wallet-adapter-wallets';
 import React, { FC, ReactElement, SyntheticEvent, useCallback, useMemo, useState } from 'react';
+import styled from 'styled-components';
 import { useWalletDialog } from './useWalletDialog';
 import { WalletListItem } from './WalletListItem';
-
-const useStyles = makeStyles((theme: Theme) => ({
-    root: {
-        '& .MuiDialog-paper': {
-            width: theme.spacing(40),
-            margin: 0,
-        },
-        '& .MuiDialogTitle-root': {
-            backgroundColor: theme.palette.primary.main,
-            '& .MuiTypography-root': {
-                display: 'flex',
-                justifyContent: 'space-between',
-                lineHeight: theme.spacing(5) + 'px',
-            },
-            '& .MuiIconButton-root': {
-                flexShrink: 1,
-                padding: theme.spacing(),
-                marginRight: theme.spacing(-1),
-                color: theme.palette.grey[500],
-            },
-        },
-        '& .MuiDialogContent-root': {
-            padding: 0,
-            '& .MuiCollapse-root': {
-                '& .MuiList-root': {
-                    background: theme.palette.grey[900],
-                },
-            },
-            '& .MuiList-root': {
-                background: theme.palette.grey[900],
-                padding: 0,
-            },
-            '& .MuiListItem-root': {
-                boxShadow: 'inset 0 1px 0 0 ' + 'rgba(255, 255, 255, 0.1)',
-                '&:hover': {
-                    boxShadow:
-                        'inset 0 1px 0 0 ' + 'rgba(255, 255, 255, 0.1)' + ', 0 1px 0 0 ' + 'rgba(255, 255, 255, 0.05)',
-                },
-                padding: 0,
-                '& .MuiButton-endIcon': {
-                    margin: 0,
-                },
-                '& .MuiButton-root': {
-                    flexGrow: 1,
-                    justifyContent: 'space-between',
-                    padding: theme.spacing(1, 3),
-                    borderRadius: undefined,
-                    fontSize: '1rem',
-                    fontWeight: 400,
-                },
-                '& .MuiSvgIcon-root': {
-                    color: theme.palette.grey[500],
-                },
-            },
-        },
-    },
-}));
 
 export interface WalletDialogProps extends Omit<DialogProps, 'title' | 'open'> {
     featuredWallets?: number;
@@ -88,8 +30,7 @@ export const WalletDialog: FC<WalletDialogProps> = ({
     onClose,
     ...props
 }) => {
-    const styles = useStyles();
-    const { wallets, select } = useWallet();
+    const { wallet, wallets, select } = useWallet();
     const { open, setOpen } = useWalletDialog();
     const [expanded, setExpanded] = useState(false);
 
@@ -117,45 +58,77 @@ export const WalletDialog: FC<WalletDialogProps> = ({
     const handleExpandClick = useCallback(() => setExpanded(!expanded), [setExpanded, expanded]);
 
     return (
-        <Dialog open={open} onClose={handleClose} className={styles.root} {...props}>
-            <DialogTitle>
-                {title}
-                <IconButton onClick={handleClose}>
-                    <CloseIcon />
-                </IconButton>
-            </DialogTitle>
-            <DialogContent>
-                <List>
-                    {featured.map((wallet) => (
-                        <WalletListItem
-                            key={wallet.name}
-                            onClick={(event) => handleWalletClick(event, wallet.name)}
-                            wallet={wallet}
-                        />
-                    ))}
-                    {more.length ? (
-                        <>
-                            <Collapse in={expanded} timeout="auto" unmountOnExit>
-                                <List>
-                                    {more.map((wallet) => (
-                                        <WalletListItem
-                                            key={wallet.name}
-                                            onClick={(event) => handleWalletClick(event, wallet.name)}
-                                            wallet={wallet}
-                                        />
-                                    ))}
-                                </List>
-                            </Collapse>
-                            <ListItem>
-                                <Button onClick={handleExpandClick}>
-                                    {expanded ? 'Less' : 'More'} options
-                                    {expanded ? <ExpandLess /> : <ExpandMore />}
-                                </Button>
-                            </ListItem>
-                        </>
-                    ) : null}
-                </List>
-            </DialogContent>
-        </Dialog>
+        <Modal open={open} onClose={handleClose} closeAfterTransition {...props}>
+            <Fade in={open} timeout={300}>
+                <StyledContainer>
+                    <ModalHeader>
+                        {title}
+                        <IconButton onClick={handleClose}>
+                            <CloseIcon />
+                        </IconButton>
+                    </ModalHeader>
+                    <ModalBody>
+                        <List>
+                            {featured.map((x) => (
+                                <WalletListItem
+                                    key={x.name}
+                                    onClick={(event) => handleWalletClick(event, x.name)}
+                                    wallet={x}
+                                    active={x === wallet}
+                                />
+                            ))}
+                            {more.length ? (
+                                <>
+                                    <Collapse in={expanded} timeout="auto" unmountOnExit>
+                                        <List disablePadding>
+                                            {more.map((wallet) => (
+                                                <WalletListItem
+                                                    key={wallet.name}
+                                                    onClick={(event) => handleWalletClick(event, wallet.name)}
+                                                    wallet={wallet}
+                                                />
+                                            ))}
+                                        </List>
+                                    </Collapse>
+                                    <ListItem>
+                                        <Button onClick={handleExpandClick}>
+                                            {expanded ? 'Less' : 'More'}
+                                            {expanded ? <ExpandLess /> : <ExpandMore />}
+                                        </Button>
+                                    </ListItem>
+                                </>
+                            ) : null}
+                        </List>
+                    </ModalBody>
+                </StyledContainer>
+            </Fade>
+        </Modal>
     );
 };
+
+const ModalHeader = styled(Box)`
+    font-size: 24px;
+    padding-left: 24px;
+    padding-right: 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+`
+
+const ModalBody = styled(Box)`
+`
+
+const StyledContainer = styled(Box)`
+    padding: 8px;
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    border-radius: 5px;
+    background: rgba(30,30,30);
+    * {
+        font-size: 16px;
+        color: white;
+    }
+    min-width: 384px;
+`

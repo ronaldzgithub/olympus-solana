@@ -8,6 +8,5 @@ export interface WalletDialogContextState {
 export const WalletDialogContext = createContext<WalletDialogContextState>({} as WalletDialogContextState);
 
 export function useWalletDialog(): WalletDialogContextState {
-    console.log(WalletDialogContext)
     return useContext(WalletDialogContext);
 }

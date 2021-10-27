@@ -14,7 +14,6 @@ export const WalletDialogButton: FC<ButtonProps> = ({
     const handleClick: MouseEventHandler<HTMLButtonElement> = useCallback(
         (event) => {
             if (onClick) onClick(event);
-            console.log(setOpen)
             if (!event.defaultPrevented) setOpen(true);
         },
         [onClick, setOpen]

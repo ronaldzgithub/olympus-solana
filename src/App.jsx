@@ -221,8 +221,8 @@ function App() {
   return (
     <ConnectionProvider endpoint={endpoint}>
       <WalletProvider wallets={wallets} autoConnect>
-        <WalletDialogProvider>
-          <ThemeProvider theme={themeMode}>
+        <ThemeProvider theme={themeMode}>
+          <WalletDialogProvider>
             <CssBaseline />
             {/* {isAppLoading && <LoadingSplash />} */}
             <div className={`app ${isSmallerScreen && "tablet"} ${isSmallScreen && "mobile"} ${theme}`}>
@@ -269,8 +269,8 @@ function App() {
                 </Switch>
               </div>
             </div>
-          </ThemeProvider>
-        </WalletDialogProvider>
+          </WalletDialogProvider>
+        </ThemeProvider>
       </WalletProvider>
     </ConnectionProvider>
   );
