@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
+import { useWallet } from '@solana/wallet-adapter-react';
 import { Box, Button, SvgIcon, Typography, Popper, Paper, Divider, Link, Slide, Fade } from "@material-ui/core";
 import { ReactComponent as ArrowUpIcon } from "../../assets/icons/arrow-up.svg";
 import { ReactComponent as CaretDownIcon } from "../../assets/icons/caret-down.svg";
 import { useWeb3Context } from "src/hooks/web3Context";
+import { WalletDisconnectButton, WalletMultiButton } from "../Wallet"
 
 function ConnectMenu({ theme }) {
   const { connect, disconnect, connected, web3, chainID } = useWeb3Context();
@@ -52,6 +54,7 @@ function ConnectMenu({ theme }) {
   useEffect(() => {
     setConnected(connected);
   }, [web3, connected]);
+  const { wallet } = useWallet();
 
   return (
     <div
@@ -60,7 +63,8 @@ function ConnectMenu({ theme }) {
       className="wallet-menu"
       id="wallet-menu"
     >
-      <Button
+      <WalletMultiButton color='secondary' size='large' />
+      {/* <Button
         className={buttonStyles}
         variant="contained"
         color="secondary"
@@ -77,7 +81,7 @@ function ConnectMenu({ theme }) {
             <SvgIcon className="caret-down" component={CaretDownIcon} htmlColor={primaryColor} />
           </Slide>
         )}
-      </Button>
+      </Button> */}
 
       <Popper id={id} open={open} anchorEl={anchorEl} placement="bottom-end" transition>
         {({ TransitionProps }) => {

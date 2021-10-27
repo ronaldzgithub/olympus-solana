@@ -16,7 +16,6 @@ import { useTheme } from "@material-ui/core/styles";
 import "./treasury-dashboard.scss";
 import apollo from "../../lib/apolloClient";
 import InfoTooltip from "src/components/InfoTooltip/InfoTooltip.jsx";
-import { main } from '../../client/main'
 
 function TreasuryDashboard() {
   const [data, setData] = useState(null);
@@ -69,12 +68,6 @@ function TreasuryDashboard() {
 
       let runway = metrics.filter(pm => pm.runway10k > 5);
       setRunway(runway);
-      main().then(
-        () => alert('end'),
-        err => {
-          console.error(err);
-        },
-      );
     });
 
     apollo(rebasesDataQuery).then(r => {

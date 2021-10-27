@@ -1,5 +1,5 @@
 import { ThemeProvider } from "@material-ui/core/styles";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import { Route, Redirect, Switch, useLocation } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { Hidden, useMediaQuery } from "@material-ui/core";
@@ -29,6 +29,20 @@ import { light as lightTheme } from "./themes/light.js";
 import { girth as gTheme } from "./themes/girth.js";
 
 import "./style.scss";
+
+import { ConnectionProvider, WalletProvider } from "@solana/wallet-adapter-react";
+import { WalletAdapterNetwork } from "@solana/wallet-adapter-base";
+import {
+  getLedgerWallet,
+  getPhantomWallet,
+  getSlopeWallet,
+  getSolflareWallet,
+  getSolletExtensionWallet,
+  getSolletWallet,
+  getTorusWallet,
+} from "@solana/wallet-adapter-wallets";
+import { WalletDialogProvider } from "./components/Wallet";
+import { clusterApiUrl } from "@solana/web3.js";
 
 // 😬 Sorry for all the console logging
 const DEBUG = false;
@@ -187,55 +201,78 @@ function App() {
     if (isSidebarExpanded) handleSidebarClose();
   }, [location]);
 
+  const network = WalletAdapterNetwork.Devnet;
+  // You can also provide a custom RPC endpoint
+  const endpoint = useMemo(() => clusterApiUrl(network), [network]);
+  // @solana/wallet-adapter-wallets includes all the adapters but supports tree shaking --
+  // Only the wallets you configure here will be compiled into your application
+  const wallets = useMemo(() => [
+    getPhantomWallet(),
+    getSlopeWallet(),
+    getSolflareWallet(),
+    getTorusWallet({
+      options: { clientId: 'Get a client ID @ https://developer.tor.us' }
+    }),
+    getLedgerWallet(),
+    getSolletWallet({ network }),
+    getSolletExtensionWallet({ network }),
+  ], [network]);
+
   return (
-    <ThemeProvider theme={themeMode}>
-      <CssBaseline />
-      {/* {isAppLoading && <LoadingSplash />} */}
-      <div className={`app ${isSmallerScreen && "tablet"} ${isSmallScreen && "mobile"} ${theme}`}>
-        <Messages />
-        <TopBar theme={theme} toggleTheme={toggleTheme} handleDrawerToggle={handleDrawerToggle} />
-        <nav className={classes.drawer}>
-          {isSmallerScreen ? (
-            <NavDrawer mobileOpen={mobileOpen} handleDrawerToggle={handleDrawerToggle} />
-          ) : (
-            <Sidebar />
-          )}
-        </nav>
+    <ConnectionProvider endpoint={endpoint}>
+      <WalletProvider wallets={wallets} autoConnect>
+        <WalletDialogProvider>
+          <ThemeProvider theme={themeMode}>
+            <CssBaseline />
+            {/* {isAppLoading && <LoadingSplash />} */}
+            <div className={`app ${isSmallerScreen && "tablet"} ${isSmallScreen && "mobile"} ${theme}`}>
+              <Messages />
+              <TopBar theme={theme} toggleTheme={toggleTheme} handleDrawerToggle={handleDrawerToggle} />
+              <nav className={classes.drawer}>
+                {isSmallerScreen ? (
+                  <NavDrawer mobileOpen={mobileOpen} handleDrawerToggle={handleDrawerToggle} />
+                ) : (
+                  <Sidebar />
+                )}
+              </nav>
 
-        <div className={`${classes.content} ${isSmallerScreen && classes.contentShift}`}>
-          <Switch>
-            <Route exact path="/dashboard">
-              <TreasuryDashboard />
-            </Route>
-
-            <Route exact path="/">
-              <Redirect to="/stake" />
-            </Route>
-
-            <Route path="/stake">
-              <Stake />
-            </Route>
-
-            <Route path="/33-together">
-              <PoolTogether />
-            </Route>
-
-            <Route path="/bonds">
-              {bonds.map(bond => {
-                return (
-                  <Route exact key={bond.name} path={`/bonds/${bond.name}`}>
-                    <Bond bond={bond} />
+              <div className={`${classes.content} ${isSmallerScreen && classes.contentShift}`}>
+                <Switch>
+                  <Route exact path="/dashboard">
+                    <TreasuryDashboard />
                   </Route>
-                );
-              })}
-              <ChooseBond />
-            </Route>
 
-            <Route component={NotFound} />
-          </Switch>
-        </div>
-      </div>
-    </ThemeProvider>
+                  <Route exact path="/">
+                    <Redirect to="/stake" />
+                  </Route>
+
+                  <Route path="/stake">
+                    <Stake />
+                  </Route>
+
+                  <Route path="/33-together">
+                    <PoolTogether />
+                  </Route>
+
+                  <Route path="/bonds">
+                    {bonds.map(bond => {
+                      return (
+                        <Route exact key={bond.name} path={`/bonds/${bond.name}`}>
+                          <Bond bond={bond} />
+                        </Route>
+                      );
+                    })}
+                    <ChooseBond />
+                  </Route>
+
+                  <Route component={NotFound} />
+                </Switch>
+              </div>
+            </div>
+          </ThemeProvider>
+        </WalletDialogProvider>
+      </WalletProvider>
+    </ConnectionProvider>
   );
 }
 
