@@ -227,7 +227,7 @@ function App() {
         <ThemeProvider theme={themeMode}>
           <WalletDialogProvider>
             <CssBaseline />
-            {/* {isAppLoading && <LoadingSplash />} */}
+            {isAppLoading && <LoadingSplash />}
             <div className={`app ${isSmallerScreen && "tablet"} ${isSmallScreen && "mobile"} ${theme}`}>
               <Messages />
               <TopBar theme={theme} toggleTheme={toggleTheme} handleDrawerToggle={handleDrawerToggle} />

@@ -25,6 +25,7 @@ import "./stake.scss";
 import { useWeb3Context } from "src/hooks/web3Context";
 import { isPendingTxn, txnButtonText } from "src/slices/PendingTxnsSlice";
 import { Skeleton } from "@material-ui/lab";
+import Transactions from "./Transactions";
 import ExternalStakePool from "./ExternalStakePool";
 import { error } from "../../slices/MessagesSlice";
 import { ethers } from "ethers";
@@ -135,15 +136,6 @@ function Stake() {
 
   const isAllowanceDataLoading = (stakeAllowance == null && view === 0) || (unstakeAllowance == null && view === 1);
 
-  let modalButton = [];
-
-  modalButton.push(
-    <WalletMultiButton color="primary" className="connect-button" />
-    // <Button variant="contained" color="primary" className="connect-button" onClick={() => connect()} key={1}>
-    //   Connect Wallet
-    // </Button>,
-  );
-
   const changeView = (event, newView) => {
     setView(newView);
   };
@@ -161,6 +153,7 @@ function Stake() {
 
   return (
     <div id="stake-view">
+      <Transactions />
       <Zoom in={true} onEntered={() => setZoomed(true)}>
         <Paper className={`ohm-card`}>
           <Grid container direction="column" spacing={2}>
@@ -240,7 +233,7 @@ function Stake() {
               {!connected ? (
                 <div className="stake-wallet-notification">
                   <div className="wallet-menu" id="wallet-menu">
-                    {modalButton}
+                    <WalletMultiButton color="primary" className="connect-button" />
                   </div>
                   <Typography variant="h6">Connect your wallet to stake OHM</Typography>
                 </div>

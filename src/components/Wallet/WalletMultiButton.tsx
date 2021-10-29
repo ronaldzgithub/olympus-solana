@@ -14,8 +14,6 @@ import SwitchIcon from '@material-ui/icons/SwapHoriz';
 import { useConnection, useWallet } from '@solana/wallet-adapter-react';
 import { TransactionInstruction, sendAndConfirmTransaction, clusterApiUrl, Connection, LAMPORTS_PER_SOL, Keypair, SystemProgram, Transaction, TransactionSignature } from '@solana/web3.js';
 import React, { FC, useMemo, useState } from 'react';
-import { sign } from 'tweetnacl';
-import bs58 from 'bs58';
 import { useWalletDialog } from './useWalletDialog';
 import { WalletConnectButton } from './WalletConnectButton';
 import { WalletDialogButton } from './WalletDialogButton';
@@ -78,59 +76,6 @@ export const WalletMultiButton: FC<ButtonProps> = ({
             console.log('success', 'Airdrop successful!', signature);
         } catch (error: any) {
             console.log('error', `Airdrop failed! ${error?.message}`, signature);
-        }
-    }
-
-    const handleSendTransaction = async () => {
-        setAnchor(undefined);
-        if (!publicKey) {
-            console.log('error', 'Wallet not connected!');
-            return;
-        }
-
-        let signature: TransactionSignature = '';
-        try {
-            console.log(SystemProgram.programId.toString())
-            const transaction = new Transaction().add(
-                SystemProgram.transfer({
-                    fromPubkey: publicKey,
-                    toPubkey: Keypair.generate().publicKey,
-                    programId: SystemProgram.programId,
-                    lamports: LAMPORTS_PER_SOL,
-                })
-            );
-
-            signature = await sendTransaction(transaction, connection);
-            console.log('info', 'Transaction sent:', signature);
-
-            await connection.confirmTransaction(signature, 'processed');
-            const balance = await connection.getBalance(publicKey)
-            dispatch(getSolanaBalance(balance - LAMPORTS_PER_SOL))
-            console.log('success', 'Transaction successful!', signature);
-        } catch (error: any) {
-            console.log('error', `Transaction failed! ${error?.message}`, signature);
-            return;
-        }
-    }
-
-    const handleSignMessage = async () => {
-        setAnchor(undefined);
-        try {
-            // `publicKey` will be null if the wallet isn't connected
-            if (!publicKey) throw new Error('Wallet not connected!');
-            // `signMessage` will be undefined if the wallet doesn't support it
-            if (!signMessage) throw new Error('Wallet does not support message signing!');
-
-            // Encode anything as bytes
-            const message = new TextEncoder().encode('Hello, world!');
-            // Sign the bytes using the wallet
-            const signature = await signMessage(message);
-            // Verify that the bytes were signed using the private key that matches the known public key
-            if (!sign.detached.verify(message, signature, publicKey.toBytes())) throw new Error('Invalid signature!');
-
-            console.log('success', `Message signature: ${bs58.encode(signature)}`);
-        } catch (error: any) {
-            console.log('error', `Signing failed: ${error?.message}`);
         }
     }
 
@@ -250,14 +195,8 @@ export const WalletMultiButton: FC<ButtonProps> = ({
                     <MenuItem onClick={handleAirdrop}>
                         Request airdrop
                     </MenuItem>
-                    <MenuItem onClick={() => handleSendTransaction()}>
-                        Send transaction
-                    </MenuItem>
                     <MenuItem onClick={() => handleSendRustTransaction()}>
                         Send transaction(RUST)
-                    </MenuItem>
-                    <MenuItem onClick={handleSignMessage}>
-                        Sign message
                     </MenuItem>
                 </Collapse>
             </Menu>

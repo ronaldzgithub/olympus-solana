@@ -25,7 +25,6 @@ function NavContent() {
   }, [wallet, base58]);
 
   const { bonds } = useBonds();
-  const { chainID } = useWeb3Context();
 
   const checkPage = useCallback((match, location, page) => {
     const currentPath = location.pathname.replace("/", "");
@@ -56,7 +55,7 @@ function NavContent() {
               Project X
             </Link>
 
-            {wallet && (
+            {(wallet && base58) && (
               <div className="wallet-link">
                 <Link href={`https://explorer.solana.com/address/${base58}?cluster=testnet`} target="_blank">
                   {content}
