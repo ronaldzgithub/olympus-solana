@@ -1,5 +1,4 @@
 import os from 'os';
-import Fs from 'fs';
 import fs from 'mz/fs';
 import path from 'path';
 import yaml from 'yaml';
@@ -10,19 +9,12 @@ import { Keypair } from '@solana/web3.js';
 async function getConfig(): Promise<any> {
   // Path to Solana CLI config file
   const CONFIG_FILE_PATH = path.resolve(
-    '/home/dash',
+    os.homedir(),
     '.config',
     'solana',
     'cli',
     'config.yml',
   );
-  Fs.readFile(CONFIG_FILE_PATH, 'utf-8', (err, data) => {
-    if (err) {
-      console.log(err)
-      return
-    }
-    console.log(data)
-  })
   const configYml = await fs.readFile(CONFIG_FILE_PATH, { encoding: 'utf8' });
   return yaml.parse(configYml);
 }

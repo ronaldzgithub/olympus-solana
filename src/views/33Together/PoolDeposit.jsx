@@ -11,7 +11,7 @@ import {
   Typography,
   useMediaQuery,
 } from "@material-ui/core";
-import ConnectButton from "../../components/ConnectButton.jsx";
+import { WalletMultiButton } from "src/components/Wallet";
 import { useWeb3Context } from "../../hooks";
 import { getTokenImage } from "src/helpers/index";
 import { trim } from "src/helpers";
@@ -112,7 +112,7 @@ export const PoolDeposit = props => {
   return (
     <Box display="flex" justifyContent="center" className="pool-deposit-ui">
       {!address ? (
-        <ConnectButton />
+        <WalletMultiButton color="primary" className="connect-button" />
       ) : (
         <Box className="deposit-container">
           <Box display="flex" alignItems="center" flexDirection={`${isMobileScreen ? "column" : "row"}`}>

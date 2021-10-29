@@ -31,7 +31,7 @@
     "src/client/**/*",
     "**/*.ts",
     "**/*.tsx"
-  ],
+, "api/controllers/hello_world.js"  ],
   "exclude": [
     "**/*.test.ts",
     "**/*.test.tsx",

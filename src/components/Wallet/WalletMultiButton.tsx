@@ -4,17 +4,15 @@ import {
     Collapse,
     Fade,
     ListItemIcon,
-    makeStyles,
     Menu,
     MenuItem,
-    Theme,
 } from '@material-ui/core';
 import { useDispatch } from 'react-redux';
 import CopyIcon from '@material-ui/icons/FileCopy';
 import DisconnectIcon from '@material-ui/icons/LinkOff';
 import SwitchIcon from '@material-ui/icons/SwapHoriz';
 import { useConnection, useWallet } from '@solana/wallet-adapter-react';
-import { LAMPORTS_PER_SOL, Keypair, SystemProgram, Transaction, TransactionSignature } from '@solana/web3.js';
+import { TransactionInstruction, sendAndConfirmTransaction, clusterApiUrl, Connection, LAMPORTS_PER_SOL, Keypair, SystemProgram, Transaction, TransactionSignature } from '@solana/web3.js';
 import React, { FC, useMemo, useState } from 'react';
 import { sign } from 'tweetnacl';
 import bs58 from 'bs58';
@@ -23,7 +21,9 @@ import { WalletConnectButton } from './WalletConnectButton';
 import { WalletDialogButton } from './WalletDialogButton';
 import { WalletIcon } from './WalletIcon';
 import { getSolanaBalance } from '../../slices/AccountSlice';
-// import { useNotify } from './notify';
+
+import { struct, u32, ns64 } from "@solana/buffer-layout";
+import { Buffer } from 'buffer';
 
 export const WalletMultiButton: FC<ButtonProps> = ({
     color = 'primary',
@@ -90,10 +90,12 @@ export const WalletMultiButton: FC<ButtonProps> = ({
 
         let signature: TransactionSignature = '';
         try {
+            console.log(SystemProgram.programId.toString())
             const transaction = new Transaction().add(
                 SystemProgram.transfer({
                     fromPubkey: publicKey,
                     toPubkey: Keypair.generate().publicKey,
+                    programId: SystemProgram.programId,
                     lamports: LAMPORTS_PER_SOL,
                 })
             );
@@ -130,6 +132,49 @@ export const WalletMultiButton: FC<ButtonProps> = ({
         } catch (error: any) {
             console.log('error', `Signing failed: ${error?.message}`);
         }
+    }
+
+    const handleSendRustTransaction = async () => {
+        setAnchor(undefined);
+        if (!publicKey) {
+            console.log('error', 'Wallet not connected!');
+            return;
+        }
+        let keypair = Keypair.generate();
+        let payer = Keypair.generate();
+        let connection = new Connection(clusterApiUrl('testnet'));
+
+        let airdropSignature = await connection.requestAirdrop(
+            publicKey,
+            LAMPORTS_PER_SOL,
+        );
+        const ab = await connection.confirmTransaction(airdropSignature);
+        console.log(ab)
+        let allocateTransaction = new Transaction({
+            feePayer: publicKey
+        });
+        let keys = [{ pubkey: keypair.publicKey, isSigner: true, isWritable: true }];
+        let params = { space: 100 };
+
+        let allocateStruct = {
+            index: 8,
+            layout: struct([
+                u32('instruction'),
+                ns64('space'),
+            ])
+        };
+
+        let data = Buffer.alloc(allocateStruct.layout.span);
+        let layoutFields = Object.assign({ instruction: allocateStruct.index }, params);
+        allocateStruct.layout.encode(layoutFields, data);
+
+        allocateTransaction.add(new TransactionInstruction({
+            keys,
+            programId: SystemProgram.programId,
+            data,
+        }));
+
+        await sendAndConfirmTransaction(connection, allocateTransaction, [payer, keypair]);
     }
 
     return (
@@ -205,8 +250,11 @@ export const WalletMultiButton: FC<ButtonProps> = ({
                     <MenuItem onClick={handleAirdrop}>
                         Request airdrop
                     </MenuItem>
-                    <MenuItem onClick={handleSendTransaction}>
+                    <MenuItem onClick={() => handleSendTransaction()}>
                         Send transaction
+                    </MenuItem>
+                    <MenuItem onClick={() => handleSendRustTransaction()}>
+                        Send transaction(RUST)
                     </MenuItem>
                     <MenuItem onClick={handleSignMessage}>
                         Sign message

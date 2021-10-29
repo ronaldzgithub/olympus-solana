@@ -43,6 +43,7 @@ import {
 } from "@solana/wallet-adapter-wallets";
 import { WalletDialogProvider } from "./components/Wallet";
 import { clusterApiUrl } from "@solana/web3.js";
+import './utils/apiConfig'
 
 // 😬 Sorry for all the console logging
 const DEBUG = false;
