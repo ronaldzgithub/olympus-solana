@@ -159,7 +159,6 @@ export async function checkProgram(): Promise<void> {
 
   // Derive the address (public key) of a greeting account from the program so that it"s easy to find later.
   const GREETING_SEED = "hello";
-  console.log(new PublicKey('9879fopHs95epzhCSSU4NdVcDvxsTAU6Tnj9XCYdMY1Y'))
   greetedPubkey = await PublicKey.createWithSeed(
     payer.publicKey,
     GREETING_SEED,

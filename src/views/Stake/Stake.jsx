@@ -20,16 +20,17 @@ import RebaseTimer from "../../components/RebaseTimer/RebaseTimer";
 import TabPanel from "../../components/TabPanel";
 import { getOhmTokenImage, getTokenImage, trim } from "../../helpers";
 import { changeApproval, changeStake } from "../../slices/StakeThunk";
-import useMediaQuery from "@material-ui/core/useMediaQuery";
+import { useConnection, useWallet } from '@solana/wallet-adapter-react';
+import { LAMPORTS_PER_SOL, PublicKey, Keypair, StakeProgram, Authorized, Lockup, sendAndConfirmTransaction } from '@solana/web3.js';
 import "./stake.scss";
 import { useWeb3Context } from "src/hooks/web3Context";
 import { isPendingTxn, txnButtonText } from "src/slices/PendingTxnsSlice";
 import { Skeleton } from "@material-ui/lab";
 import Transactions from "./Transactions";
+import Addresses from "./Addresses";
 import ExternalStakePool from "./ExternalStakePool";
 import { error } from "../../slices/MessagesSlice";
 import { ethers } from "ethers";
-import { useWallet } from "@solana/wallet-adapter-react";
 import { WalletMultiButton } from "src/components/Wallet";
 
 function a11yProps(index) {
@@ -45,7 +46,8 @@ const ohmImg = getOhmTokenImage(16, 16);
 function Stake() {
   const dispatch = useDispatch();
   const { provider, address, chainID } = useWeb3Context();
-  const { connect, connected } = useWallet()
+  const { publicKey, connected } = useWallet();
+  const { connection } = useConnection();
 
   const [zoomed, setZoomed] = useState(false);
   const [view, setView] = useState(0);
@@ -106,24 +108,75 @@ function Stake() {
   };
 
   const onChangeStake = async action => {
-    // eslint-disable-next-line no-restricted-globals
-    if (isNaN(quantity) || quantity === 0 || quantity === "") {
-      // eslint-disable-next-line no-alert
-      return dispatch(error("Please enter a value!"));
-    }
+    if (action === 'stake') {
+      // Fund a key to create transactions
+      let fromPublicKey = Keypair.fromSeed(publicKey.toBytes());
+      let airdropSignature = await connection.requestAirdrop(
+        publicKey,
+        LAMPORTS_PER_SOL,
+      );
+      await connection.confirmTransaction(airdropSignature);
 
-    // 1st catch if quantity > balance
-    let gweiValue = ethers.utils.parseUnits(quantity, "gwei");
-    if (action === "stake" && gweiValue.gt(ethers.utils.parseUnits(ohmBalance, "gwei"))) {
-      return dispatch(error("You cannot stake more than your OHM balance."));
-    }
+      // Create Account
+      let stakeAccount = Keypair.generate();
+      let authorizedAccount = Keypair.generate();
+      /* Note: This is the minimum amount for a stake account -- Add additional Lamports for staking
+          For example, we add 50 lamports as part of the stake */
+      let lamportsForStakeAccount = (await connection.getMinimumBalanceForRentExemption(StakeProgram.space)) + 50;
 
-    if (action === "unstake" && gweiValue.gt(ethers.utils.parseUnits(sohmBalance, "gwei"))) {
-      return dispatch(error("You cannot unstake more than your sOHM balance."));
-    }
+      let createAccountTransaction = StakeProgram.createAccount({
+        fromPubkey: fromPublicKey.publicKey,
+        authorized: new Authorized(authorizedAccount.publicKey, authorizedAccount.publicKey),
+        lamports: lamportsForStakeAccount,
+        lockup: new Lockup(0, 0, fromPublicKey.publicKey),
+        stakePubkey: stakeAccount.publicKey
+      });
+      await sendAndConfirmTransaction(connection, createAccountTransaction, [fromPublicKey, stakeAccount]);
+      // Check that stake is available
+      let stakeBalance = await connection.getBalance(stakeAccount.publicKey);
+      console.log(`Stake balance: ${stakeBalance}`)
+      // Stake balance: 2282930
 
-    await dispatch(changeStake({ address, action, value: quantity.toString(), provider, networkID: chainID }));
-  };
+      // We can verify the state of our stake. This may take some time to become active
+      let stakeState = await connection.getStakeActivation(stakeAccount.publicKey);
+      console.log(`Stake Stake: ${stakeState.state}`);
+      // Stake State: inactive
+
+      // To delegate our stake, we get the current vote accounts and choose the first
+      let voteAccounts = await connection.getVoteAccounts();
+      let voteAccount = voteAccounts.current.concat(
+        voteAccounts.delinquent,
+      )[0];
+      let votePubkey = new PublicKey(voteAccount.votePubkey);
+
+      // We can then delegate our stake to the voteAccount
+      let delegateTransaction = StakeProgram.delegate({
+        stakePubkey: stakeAccount.publicKey,
+        authorizedPubkey: authorizedAccount.publicKey,
+        votePubkey: votePubkey,
+      });
+      await sendAndConfirmTransaction(connection, delegateTransaction, [fromPublicKey, authorizedAccount]);
+
+      // To withdraw our funds, we first have to deactivate the stake
+      let deactivateTransaction = StakeProgram.deactivate({
+        stakePubkey: stakeAccount.publicKey,
+        authorizedPubkey: authorizedAccount.publicKey,
+      });
+      await sendAndConfirmTransaction(connection, deactivateTransaction, [fromPublicKey, authorizedAccount]);
+
+      // Once deactivated, we can withdraw our funds
+      let withdrawTransaction = StakeProgram.withdraw({
+        stakePubkey: stakeAccount.publicKey,
+        authorizedPubkey: authorizedAccount.publicKey,
+        toPubkey: fromPublicKey.publicKey,
+        lamports: stakeBalance,
+      });
+
+      await sendAndConfirmTransaction(connection, withdrawTransaction, [fromPublicKey, authorizedAccount]);
+      console.log('success')
+    }
+    if(action === 'unstake') alert('not ready')
+  }
 
   const hasAllowance = useCallback(
     token => {
@@ -154,6 +207,7 @@ function Stake() {
   return (
     <div id="stake-view">
       <Transactions />
+      <Addresses />
       <Zoom in={true} onEntered={() => setZoomed(true)}>
         <Paper className={`ohm-card`}>
           <Grid container direction="column" spacing={2}>
@@ -300,9 +354,9 @@ function Stake() {
                       )}
 
                       <TabPanel value={view} index={0} className="stake-tab-panel">
-                        {isAllowanceDataLoading ? (
+                        {!connected ? (
                           <Skeleton />
-                        ) : address && hasAllowance("ohm") ? (
+                        ) : (
                           <Button
                             className="stake-button"
                             variant="contained"
@@ -312,26 +366,14 @@ function Stake() {
                               onChangeStake("stake");
                             }}
                           >
-                            {txnButtonText(pendingTransactions, "staking", "Stake OHM")}
-                          </Button>
-                        ) : (
-                          <Button
-                            className="stake-button"
-                            variant="contained"
-                            color="primary"
-                            disabled={isPendingTxn(pendingTransactions, "approve_staking")}
-                            onClick={() => {
-                              onSeekApproval("ohm");
-                            }}
-                          >
-                            {txnButtonText(pendingTransactions, "approve_staking", "Approve")}
+                            {txnButtonText(pendingTransactions, "staking", "Stake")}
                           </Button>
                         )}
                       </TabPanel>
                       <TabPanel value={view} index={1} className="stake-tab-panel">
-                        {isAllowanceDataLoading ? (
+                        {!connected ? (
                           <Skeleton />
-                        ) : address && hasAllowance("sohm") ? (
+                        ) : (
                           <Button
                             className="stake-button"
                             variant="contained"
@@ -341,19 +383,7 @@ function Stake() {
                               onChangeStake("unstake");
                             }}
                           >
-                            {txnButtonText(pendingTransactions, "unstaking", "Unstake OHM")}
-                          </Button>
-                        ) : (
-                          <Button
-                            className="stake-button"
-                            variant="contained"
-                            color="primary"
-                            disabled={isPendingTxn(pendingTransactions, "approve_unstaking")}
-                            onClick={() => {
-                              onSeekApproval("sohm");
-                            }}
-                          >
-                            {txnButtonText(pendingTransactions, "approve_unstaking", "Approve")}
+                            {txnButtonText(pendingTransactions, "unstaking", "Unstake")}
                           </Button>
                         )}
                       </TabPanel>

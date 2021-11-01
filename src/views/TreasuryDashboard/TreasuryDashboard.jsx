@@ -20,7 +20,6 @@ import apollo from "../../lib/apolloClient";
 import InfoTooltip from "src/components/InfoTooltip/InfoTooltip.jsx";
 
 import { getSolanaBalance } from "../../slices/AccountSlice";
-import axios from "axios";
 
 function TreasuryDashboard() {
   const dispatch = useDispatch();
