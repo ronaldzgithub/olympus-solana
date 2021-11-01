@@ -148,7 +148,7 @@ function NavContent() {
             </div>
           </div>
         </div>
-        <Box className="dapp-menu-bottom" display="flex" justifyContent="space-between" flexDirection="column">
+        <Box className="dapp-menu-bottom" display="flex" justifyContent="flex-end" flexDirection="column">
           {/* <div className="dapp-menu-external-links">
             {Object.keys(externalUrls).map((link, i) => {
               return (
